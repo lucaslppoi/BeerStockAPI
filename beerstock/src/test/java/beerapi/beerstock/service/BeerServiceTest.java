@@ -4,6 +4,7 @@ import beerapi.beerstock.builder.BeerDTOBuilder;
 import beerapi.beerstock.dto.BeerDTO;
 import beerapi.beerstock.entity.Beer;
 import beerapi.beerstock.exception.BeerAlreadyRegisteredException;
+import beerapi.beerstock.exception.BeerNotFoundException;
 import beerapi.beerstock.mapper.BeerMapper;
 import beerapi.beerstock.repository.BeerRepository;
 import org.junit.jupiter.api.Test;
@@ -57,5 +58,25 @@ public class BeerServiceTest {
         assertThrows(BeerAlreadyRegisteredException.class, () -> beerService.createBeer(expectedBeerDTO));
     }
 
+    @Test
+    void whenValidBeerNameIsGivenThenReturnABeer() throws BeerNotFoundException {
+        BeerDTO expectedFoundBeerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
+        Beer expectedFoundBeer = beerMapper.toModel(expectedFoundBeerDTO);
+
+        when(beerRepository.findByName(expectedFoundBeer.getName())).thenReturn(Optional.of(expectedFoundBeer));
+
+        BeerDTO foundBeerDTO = beerService.findByName(expectedFoundBeerDTO.getName());
+
+        assertThat(foundBeerDTO, is(equalTo(expectedFoundBeerDTO)));
+    }
+
+    @Test
+    void whenNotRegisteredBeerNameIsGivenThenThrowAnException() {
+        BeerDTO expectedFoundBeerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
+
+        when(beerRepository.findByName(expectedFoundBeerDTO.getName())).thenReturn(Optional.empty());
+
+        assertThrows(BeerNotFoundException.class, () -> beerService.findByName(expectedFoundBeerDTO.getName()));
+    }
 
 }
